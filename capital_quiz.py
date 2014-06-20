@@ -29,11 +29,14 @@ def confirmQuit():
 
 def printScore(score, count, remaining):
   pct_complete = round(count/(count+remaining+0.)*100, 2)
-  wrong = count-score
-  pct_right = round((score/(count+0.))*100, 2))
+  wrong = count - score
+  if count > 0:
+    pct_right = round((score/(count+0.))*100, 2)
+  else:
+    pct_right = 0.0
   sys.stdout.write(("\rFinal score after %s questions (%s%%): %s correct, "
                     "%s incorrect (%s%%).\n" % (count, pct_complete, score,
-                                                wrong, pct_right))
+                                                wrong, pct_right)))
   sys.stdout.flush()
 
 def runQuiz():
