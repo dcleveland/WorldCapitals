@@ -6,14 +6,20 @@ from subprocess import PIPE
 import sys
 
 
-QUESTION = "What is the capital of %s?\n\ta. %s\n\tb. %s\n\tc. %s\n"
+QUESTION_CAPITAL = "What is the capital of %s?\n\ta. %s\n\tb. %s\n\tc. %s\n"
+QUESTION_COUNTRY = "%s is the capital of?\n\ta. %s\n\tb. %s\n\tc. %s\n"
+DATA = dataset.data.items()
 
-
-def makeQuestion(countries):
-  a = random.choice(countries.keys())
-  q = countries[a]
-  options = random.sample([v for v in countries.keys() if v != a], 2)
-  q = {"question": q, "answer": a, "options": options}
+def makeQuestion(dataset, question_tuple, quiz_type):
+  if quiz_type == 3:
+    quiz_type = random.choice([1, 2])
+  if quiz_type == 1:
+    a, q = question_tuple
+    options = random.sample([v[0] for v in dataset if v[0] != a], 2)
+  else:
+    q, a = question_tuple
+    options = random.sample([v[1] for v in dataset if v[1] != a], 2)
+  q = {"question": q, "answer": a, "options": options, "quiz_type": quiz_type}
   return q
 
 def clearScreen():
@@ -42,23 +48,25 @@ def printScore(score, count, remaining):
 def runQuiz():
   score = 0
   count = 0
-  data = dataset.data
-  while data:
-    q = makeQuestion(data)
+  data = DATA
+  random.shuffle(data)
+  quiz_type = int(raw_input("Quiz on Capitals (1), Countries (2) or Both (3): "))
+  for i, capital_country in enumerate(data):
+    q = makeQuestion(data, capital_country, quiz_type)
     opts = q["options"]
     opts.append(q["answer"])
     random.shuffle(opts)
     ans_index = opts.index(q["answer"])
     this_q = {"question": q["question"], "options": opts}
-    try:
-      output = QUESTION % (this_q['question'], opts[0], opts[1], opts[2])
-    except:
-      print this_q
+    if q["quiz_type"] == 1:
+      output = QUESTION_CAPITAL % (this_q['question'], opts[0], opts[1], opts[2])
+    else:
+      output = QUESTION_COUNTRY % (this_q['question'], opts[0], opts[1], opts[2])
     resp = raw_input(output)
     if resp == "q":
       quit = confirmQuit()
       if quit:
-        printScore(score, count, len(data))
+        printScore(score, count, len(data) - i)
         return
       else:
         pass
@@ -68,13 +76,12 @@ def runQuiz():
       score += 1
       count += 1
       sys.stdout.write("\rCorrect! Score: %s / %s (%s remaining)\n" %
-                       (score,count, len(data) - 1))
+                       (score,count, len(data) - 1 - i))
       sys.stdout.flush()
     else:
       count += 1
       sys.stdout.write("\rIncorrect. Score: %s / %s\n" % (score, count))
       sys.stdout.flush()
-    data.pop(q["answer"])
   printScore(score, count, remaining)
 
 
